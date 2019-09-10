@@ -1,0 +1,20 @@
+apiVersion: v1
+name: cosmos
+version: 0.1.0
+appVersion: 0.34.7
+description: Cosmos is a decentralized network of independent parallel blockchains, each powered by BFT consensus
+  algorithms like Tendermint consensus.
+keywords:
+  - cosmos
+  - blockchain
+  - gaiad
+  - gaiacli
+home: https://cosmos.network/
+icon: https://cosmos.network/img/logo.e561e4f3.png
+sources:
+  - https://github.com/cosmos/cosmos-sdk/
+  - https://github.com/cosmos/gaia
+maintainers:
+  - name: Ramil Amerzyanov
+    email: ramilexe@consideritdone.tech
+    url: https://github.com/ramilexe

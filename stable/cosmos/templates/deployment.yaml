@@ -1,0 +1,71 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "cosmos.fullname" . }}
+  labels:
+    app: {{ template "cosmos.fullname" . }}
+    chart: {{ template "cosmos.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "cosmos.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "cosmos.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      initContainers:
+        - name: config-cosmos
+          image: busybox
+          command:
+            - "sh"
+            - "-c"
+            - |
+              set -ex
+              # copy config
+              cp /tmp/config/config.toml /root/.gaiad/config/config.toml;
+          volumeMounts:
+            - name: config-path
+              mountPath: /root/.gaiad/config
+            - name: config-source
+              mountPath: /tmp/config
+      containers:
+        - name: {{ template "cosmos.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          command:
+            - '/bin/sh'
+            - '-c'
+            - >
+              set -ex
+              #ls -lah /root/.gaiad && ls -lah /root/.gaiad/config;
+              #which gaiad;
+              #env;
+              gaiad init {{ .Release.Name }};
+              ls -lah /root/.gaiad && ls -lah /root/.gaiad/config;
+              wget {{ .Values.cosmos.genesisPath }} -O $HOME/.gaiad/config/genesis.json;
+              gaiad start;
+          resources:
+    {{ toYaml .Values.resources | indent 10 -}}
+          volumeMounts:
+            - name: config-path
+              mountPath: /root/.gaiad/config
+            - name: data
+              mountPath: /root/.gaiad
+      volumes:
+        - name: config-source
+          configMap:
+            name: {{ template "cosmos.fullname" . }}-config
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "cosmos.fullname" .) }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: config-path
+          emptyDir: {}
